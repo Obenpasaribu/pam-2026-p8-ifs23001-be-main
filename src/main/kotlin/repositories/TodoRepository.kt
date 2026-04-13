@@ -13,25 +13,32 @@ import java.util.*
 fun String.toUUIDOrNull(): UUID? = try { UUID.fromString(this) } catch (e: Exception) { null }
 
 class TodoRepository(private val baseUrl: String) : ITodoRepository {
-    override suspend fun getAll(userId: String, search: String): List<Todo> = suspendTransaction {
+    override suspend fun getAll(
+        userId: String, 
+        search: String, 
+        status: String, 
+        page: Int, 
+        perPage: Int
+    ): List<Todo> = suspendTransaction {
         val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction emptyList()
-        if (search.isBlank()) {
-            TodoDAO
-                .find {
-                    (TodoTable.userId eq userUuid)
-                }
-                .orderBy(TodoTable.createdAt to SortOrder.DESC)
-                .map{ todoDAOToModel(it, baseUrl) }
-        } else {
-            val keyword = "%${search.lowercase()}%"
+        
+        val query = TodoTable.selectAll().where { TodoTable.userId eq userUuid }
 
-            TodoDAO
-                .find {
-                    (TodoTable.userId eq userUuid) and (TodoTable.title.lowerCase() like keyword)
-                }
-                .orderBy(TodoTable.title to SortOrder.ASC)
-                .map{ todoDAOToModel(it, baseUrl) }
+        if (search.isNotBlank()) {
+            query.andWhere { TodoTable.title.lowerCase() like "%${search.lowercase()}%" }
         }
+
+        when (status.lowercase()) {
+            "completed" -> query.andWhere { TodoTable.isDone eq true }
+            "pending" -> query.andWhere { TodoTable.isDone eq false }
+        }
+
+        val offset = ((page - 1) * perPage).toLong()
+
+        TodoDAO.wrapRows(query)
+            .orderBy(TodoTable.createdAt to SortOrder.DESC)
+            .limit(perPage, offset = offset)
+            .map { todoDAOToModel(it, baseUrl) }
     }
 
     override suspend fun getById(todoId: String): Todo? = suspendTransaction {

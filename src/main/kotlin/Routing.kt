@@ -64,36 +64,19 @@ fun Application.configureRouting() {
                 put("/me/photo") { userService.putMyPhoto(call) }
             }
 
+            // KITA PISAHKAN STATS AGAR TIDAK BENTROK DENGAN ID
+            get("/todos/stats") {
+                todoService.getStats(call)
+            }
+
             route("/todos") {
-                // Rute statis diletakkan paling atas dan dibuat lebih spesifik
-                get("/stats") {
-                    todoService.getStats(call)
-                }
+                get { todoService.getAll(call) }
+                post { todoService.post(call) }
                 
-                get("") { // Untuk /todos
-                    todoService.getAll(call)
-                }
-
-                post("") { // Untuk /todos
-                    todoService.post(call)
-                }
-
-                // Rute dinamis diletakkan di paling bawah
-                get("/{id}") {
-                    todoService.getById(call)
-                }
-
-                put("/{id}") {
-                    todoService.put(call)
-                }
-
-                put("/{id}/cover") {
-                    todoService.putCover(call)
-                }
-
-                delete("/{id}") {
-                    todoService.delete(call)
-                }
+                get("/{id}") { todoService.getById(call) }
+                put("/{id}") { todoService.put(call) }
+                put("/{id}/cover") { todoService.putCover(call) }
+                delete("/{id}") { todoService.delete(call) }
             }
         }
 

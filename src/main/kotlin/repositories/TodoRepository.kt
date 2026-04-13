@@ -37,7 +37,8 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
 
         TodoDAO.wrapRows(query)
             .orderBy(TodoTable.createdAt to SortOrder.DESC)
-            .limit(perPage, offset = offset)
+            .limit(perPage)
+            .offset(offset)
             .map { todoDAOToModel(it, baseUrl) }
     }
 

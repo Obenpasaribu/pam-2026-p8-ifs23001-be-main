@@ -89,11 +89,12 @@ fun Application.configureRouting() {
 
             // Route Todos
             route("/todos") {
-                get {
-                    todoService.getAll(call)
-                }
+                // Rute statis harus di atas rute dinamis /{id} agar tidak dianggap sebagai ID
                 get("/stats") {
                     todoService.getStats(call)
+                }
+                get {
+                    todoService.getAll(call)
                 }
                 post {
                     todoService.post(call)

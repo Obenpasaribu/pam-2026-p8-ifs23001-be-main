@@ -85,8 +85,8 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
 
     override suspend fun getStats(userId: String): Map<String, Any> = suspendTransaction {
         val userUuid = UUID.fromString(userId)
-        val total = TodoTable.select { TodoTable.userId eq userUuid }.count()
-        val completed = TodoTable.select { (TodoTable.userId eq userUuid) and (TodoTable.isDone eq true) }.count()
+        val total = TodoTable.selectAll().where { TodoTable.userId eq userUuid }.count()
+        val completed = TodoTable.selectAll().where { (TodoTable.userId eq userUuid) and (TodoTable.isDone eq true) }.count()
         val pending = total - completed
         val percentage = if (total > 0) (completed.toDouble() / total.toDouble() * 100) else 0.0
 

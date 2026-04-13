@@ -14,6 +14,7 @@ import kotlinx.coroutines.withContext
 import org.delcom.data.AppException
 import org.delcom.data.DataResponse
 import org.delcom.data.TodoRequest
+import org.delcom.data.TodoStats
 import org.delcom.helpers.ServiceHelper
 import org.delcom.helpers.ValidatorHelper
 import org.delcom.repositories.ITodoRepository
@@ -44,7 +45,14 @@ class TodoService(
     // Mengambil statistik todo
     suspend fun getStats(call: ApplicationCall) {
         val user = ServiceHelper.getAuthUser(call, userRepo)
-        val stats = todoRepo.getStats(user.id)
+        val statsMap = todoRepo.getStats(user.id)
+
+        val stats = TodoStats(
+            total = statsMap["total"] as Int,
+            completed = statsMap["completed"] as Int,
+            pending = statsMap["pending"] as Int,
+            percentage = statsMap["percentage"] as Double
+        )
 
         val response = DataResponse(
             "success",

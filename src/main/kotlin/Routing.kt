@@ -65,20 +65,20 @@ fun Application.configureRouting() {
             }
 
             route("/todos") {
-                // PRIORITAS UTAMA: Rute statis diletakkan paling atas
+                // Rute statis diletakkan paling atas dan dibuat lebih spesifik
                 get("/stats") {
                     todoService.getStats(call)
                 }
                 
-                get {
+                get("") { // Untuk /todos
                     todoService.getAll(call)
                 }
 
-                post {
+                post("") { // Untuk /todos
                     todoService.post(call)
                 }
 
-                // Rute dinamis diletakkan di bawah agar tidak menimpa /stats
+                // Rute dinamis diletakkan di paling bawah
                 get("/{id}") {
                     todoService.getById(call)
                 }

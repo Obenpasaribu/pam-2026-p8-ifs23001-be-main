@@ -11,10 +11,11 @@ import java.util.*
 
 class TodoRepository(private val baseUrl: String) : ITodoRepository {
     override suspend fun getAll(userId: String, search: String): List<Todo> = suspendTransaction {
+        val userUuid = UUID.fromString(userId)
         if (search.isBlank()) {
             TodoDAO
                 .find {
-                    (TodoTable.userId eq UUID.fromString(userId))
+                    (TodoTable.userId eq userUuid)
                 }
                 .orderBy(TodoTable.createdAt to SortOrder.DESC)
                 .map{ todoDAOToModel(it, baseUrl) }
@@ -23,7 +24,7 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
 
             TodoDAO
                 .find {
-                    (TodoTable.userId eq UUID.fromString(userId)) and (TodoTable.title.lowerCase() like keyword)
+                    (TodoTable.userId eq userUuid) and (TodoTable.title.lowerCase() like keyword)
                 }
                 .orderBy(TodoTable.title to SortOrder.ASC)
                 .map{ todoDAOToModel(it, baseUrl) }
@@ -85,8 +86,11 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
 
     override suspend fun getStats(userId: String): Map<String, Any> = suspendTransaction {
         val userUuid = UUID.fromString(userId)
-        val total = TodoTable.selectAll().where { TodoTable.userId eq userUuid }.count()
-        val completed = TodoTable.selectAll().where { (TodoTable.userId eq userUuid) and (TodoTable.isDone eq true) }.count()
+        
+        // Pastikan menggunakan .toInt() agar sinkron dengan Front-End
+        val total = TodoTable.selectAll().where { TodoTable.userId eq userUuid }.count().toInt()
+        val completed = TodoTable.selectAll().where { (TodoTable.userId eq userUuid) and (TodoTable.isDone eq true) }.count().toInt()
+
         val pending = total - completed
         val percentage = if (total > 0) (completed.toDouble() / total.toDouble() * 100) else 0.0
 

@@ -19,8 +19,8 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
         status: String, 
         page: Int, 
         perPage: Int
-    ): List<Todo> = suspendTransaction {
-        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction emptyList()
+    ): Map<String, Any> = suspendTransaction {
+        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction mapOf("todos" to emptyList<Todo>(), "total" to 0)
         
         val query = TodoTable.selectAll().where { TodoTable.userId eq userUuid }
 
@@ -33,13 +33,21 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
             "pending" -> query.andWhere { TodoTable.isDone eq false }
         }
 
+        val total = query.count()
         val offset = ((page - 1) * perPage).toLong()
 
-        TodoDAO.wrapRows(query)
+        val todos = TodoDAO.wrapRows(query)
             .orderBy(TodoTable.createdAt to SortOrder.DESC)
             .limit(perPage)
             .offset(offset)
             .map { todoDAOToModel(it, baseUrl) }
+
+        mapOf(
+            "todos" to todos,
+            "total" to total,
+            "page" to page,
+            "perPage" to perPage
+        )
     }
 
     override suspend fun getById(todoId: String): Todo? = suspendTransaction {

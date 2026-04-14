@@ -9,7 +9,7 @@ interface ITodoRepository {
         status: String = "all", 
         page: Int = 1, 
         perPage: Int = 10
-    ): List<Todo>
+    ): Map<String, Any>
     suspend fun getById(todoId: String): Todo?
     suspend fun create(todo: Todo): String
     suspend fun update(userId: String, todoId: String, newTodo: Todo): Boolean

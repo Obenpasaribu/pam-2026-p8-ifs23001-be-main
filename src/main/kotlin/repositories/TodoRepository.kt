@@ -7,12 +7,15 @@ import org.delcom.helpers.todoDAOToModel
 import org.delcom.tables.TodoTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.slf4j.LoggerFactory
 import java.util.*
 
 // Helper untuk menghindari crash saat parsing UUID
 fun String.toUUIDOrNull(): UUID? = try { UUID.fromString(this) } catch (e: Exception) { null }
 
 class TodoRepository(private val baseUrl: String) : ITodoRepository {
+    private val logger = LoggerFactory.getLogger(TodoRepository::class.java)
+
     override suspend fun getAll(
         userId: String, 
         search: String, 
@@ -22,6 +25,8 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
     ): Map<String, Any> = suspendTransaction {
         val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction mapOf("todos" to emptyList<Todo>(), "total" to 0)
         
+        logger.info("Fetching todos for user: $userId, search: $search, status: $status, page: $page")
+
         val conditions = buildConditions(userUuid, search, status)
 
         val total = TodoTable.selectAll().where(conditions).count()
@@ -32,7 +37,10 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
             .orderBy(TodoTable.createdAt to SortOrder.DESC)
             .limit(perPage)
             .offset(offset)
+            .toList() // Execute query here
             .map { todoDAOToModel(it, baseUrl) }
+
+        logger.info("Found ${todos.size} todos out of $total total")
 
         mapOf(
             "todos" to todos,
@@ -53,9 +61,16 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
             conditions = conditions and (TodoTable.title.lowerCase() like "%${search.lowercase()}%")
         }
 
-        when (status.lowercase()) {
-            "completed" -> conditions = conditions and (TodoTable.isDone eq true)
-            "pending" -> conditions = conditions and (TodoTable.isDone eq false)
+        // PERBAIKAN LOGIKA: Pastikan perbandingan string bersih
+        val statusClean = status.lowercase().trim()
+        when (statusClean) {
+            "completed" -> {
+                conditions = conditions and (TodoTable.isDone eq true)
+            }
+            "pending" -> {
+                conditions = conditions and (TodoTable.isDone eq false)
+            }
+            // "all", "semua", atau string lain tidak menambah filter isDone
         }
 
         return conditions

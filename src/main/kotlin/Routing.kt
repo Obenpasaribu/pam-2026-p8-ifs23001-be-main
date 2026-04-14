@@ -64,15 +64,16 @@ fun Application.configureRouting() {
                 put("/me/photo") { userService.putMyPhoto(call) }
             }
 
-            // KITA PISAHKAN STATS AGAR TIDAK BENTROK DENGAN ID
-            get("/todos/stats") {
-                todoService.getStats(call)
-            }
-
             route("/todos") {
+                // 1. STATS HARUS DI ATAS ID AGAR TIDAK BENTROK
+                get("/stats") {
+                    todoService.getStats(call)
+                }
+
                 get { todoService.getAll(call) }
                 post { todoService.post(call) }
                 
+                // 2. ROUTE DENGAN PARAMETER {id} DI BAWAH STATS
                 get("/{id}") { todoService.getById(call) }
                 put("/{id}") { todoService.put(call) }
                 put("/{id}/cover") { todoService.putCover(call) }

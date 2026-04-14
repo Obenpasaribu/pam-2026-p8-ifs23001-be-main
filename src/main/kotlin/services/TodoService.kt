@@ -35,12 +35,12 @@ class TodoService(
         val page = call.request.queryParameters["page"]?.toIntOrNull() ?: 1
         val perPage = call.request.queryParameters["perPage"]?.toIntOrNull() ?: 10
 
-        val todos = todoRepo.getAll(user.id, search, status, page, perPage)
+        val result = todoRepo.getAll(user.id, search, status, page, perPage)
 
         val response = DataResponse(
             "success",
             "Berhasil mengambil daftar todo saya",
-            mapOf(Pair("todos", todos))
+            result
         )
         call.respond(response)
     }

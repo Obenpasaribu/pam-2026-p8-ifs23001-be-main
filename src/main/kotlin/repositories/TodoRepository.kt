@@ -7,6 +7,7 @@ import org.delcom.helpers.todoDAOToModel
 import org.delcom.tables.TodoTable
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.slf4j.LoggerFactory
 import java.util.*
 

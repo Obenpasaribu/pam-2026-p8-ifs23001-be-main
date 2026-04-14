@@ -5,10 +5,7 @@ import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
-import org.delcom.data.AppException
-import org.delcom.data.AuthRequest
-import org.delcom.data.DataResponse
-import org.delcom.data.RefreshTokenRequest
+import org.delcom.data.*
 import org.delcom.entities.RefreshToken
 import org.delcom.helpers.JWTConstants
 import org.delcom.helpers.ValidatorHelper
@@ -16,6 +13,7 @@ import org.delcom.helpers.hashPassword
 import org.delcom.helpers.verifyPassword
 import org.delcom.repositories.IRefreshTokenRepository
 import org.delcom.repositories.IUserRepository
+import org.slf4j.LoggerFactory
 import java.util.*
 
 class AuthService(
@@ -23,6 +21,8 @@ class AuthService(
     private val userRepository: IUserRepository,
     private val refreshTokenRepository: IRefreshTokenRepository,
 ) {
+    private val logger = LoggerFactory.getLogger(AuthService::class.java)
+
     // register
     suspend fun postRegister(call: ApplicationCall) {
         // Ambil data request
@@ -57,6 +57,8 @@ class AuthService(
 
     // Login
     suspend fun postLogin(call: ApplicationCall) {
+        logger.info("Login attempt at ${System.currentTimeMillis()}")
+        
         // Ambil data request
         val request = call.receive<AuthRequest>()
 
@@ -99,9 +101,10 @@ class AuthService(
         val response = DataResponse(
             "success",
             "Berhasil melakukan login",
-            mapOf(
-                Pair("authToken", authToken),
-                Pair("refreshToken", strRefreshToken)
+            AuthResponse(
+                authToken = authToken,
+                refreshToken = strRefreshToken,
+                userId = existUser.id
             )
         )
         call.respond(response)
@@ -109,6 +112,8 @@ class AuthService(
 
     // Refresh Token
     suspend fun postRefreshToken(call: ApplicationCall) {
+        logger.info("Refresh token requested at ${System.currentTimeMillis()}")
+        
         // Ambil data request
         val request = call.receive<RefreshTokenRequest>()
 
@@ -157,9 +162,10 @@ class AuthService(
         val response = DataResponse(
             "success",
             "Berhasil melakukan refresh token",
-            mapOf(
-                Pair("authToken", authToken),
-                Pair("refreshToken", strRefreshToken)
+            AuthResponse(
+                authToken = authToken,
+                refreshToken = strRefreshToken,
+                userId = user.id
             )
         )
         call.respond(response)

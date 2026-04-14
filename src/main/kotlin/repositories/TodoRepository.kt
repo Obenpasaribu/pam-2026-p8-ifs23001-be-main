@@ -22,21 +22,13 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
     ): Map<String, Any> = suspendTransaction {
         val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction mapOf("todos" to emptyList<Todo>(), "total" to 0)
         
-        val query = TodoTable.selectAll().where { TodoTable.userId eq userUuid }
+        val conditions = buildConditions(userUuid, search, status)
 
-        if (search.isNotBlank()) {
-            query.andWhere { TodoTable.title.lowerCase() like "%${search.lowercase()}%" }
-        }
-
-        when (status.lowercase()) {
-            "completed" -> query.andWhere { TodoTable.isDone eq true }
-            "pending" -> query.andWhere { TodoTable.isDone eq false }
-        }
-
-        val total = query.count()
+        val total = TodoTable.selectAll().where(conditions).count()
         val offset = ((page - 1) * perPage).toLong()
 
-        val todos = TodoDAO.wrapRows(query)
+        val todos = TodoDAO
+            .find(conditions)
             .orderBy(TodoTable.createdAt to SortOrder.DESC)
             .limit(perPage)
             .offset(offset)
@@ -48,6 +40,25 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
             "page" to page,
             "perPage" to perPage
         )
+    }
+
+    private fun buildConditions(
+        userUuid: UUID,
+        search: String,
+        status: String,
+    ): Op<Boolean> {
+        var conditions: Op<Boolean> = TodoTable.userId eq userUuid
+
+        if (search.isNotBlank()) {
+            conditions = conditions and (TodoTable.title.lowerCase() like "%${search.lowercase()}%")
+        }
+
+        when (status.lowercase()) {
+            "completed" -> conditions = conditions and (TodoTable.isDone eq true)
+            "pending" -> conditions = conditions and (TodoTable.isDone eq false)
+        }
+
+        return conditions
     }
 
     override suspend fun getById(todoId: String): Todo? = suspendTransaction {

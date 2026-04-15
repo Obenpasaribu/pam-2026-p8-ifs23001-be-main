@@ -39,7 +39,7 @@ class UserService(
                     id = user.id,
                     name = user.name,
                     username = user.username,
-                    photo = if (user.photo != null) "$baseUrl/images/users/${user.id}" else null,
+                    photo = if (user.photo != null) "$baseUrl/images/users/${user.id}?t=${System.currentTimeMillis()}" else null,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 ),

@@ -10,11 +10,3 @@ data class TodoListResponse(
     val page: Int,
     val perPage: Int
 )
-
-@Serializable
-data class TodoStats(
-    val total: Int,
-    val completed: Int,
-    val pending: Int,
-    val percentage: Double
-)

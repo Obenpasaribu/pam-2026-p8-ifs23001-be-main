@@ -22,14 +22,14 @@ fun appModule(application: Application) = module {
         UserRepository(baseUrl)
     }
 
-    // User Service
-    single {
-        UserService(get(), get())
-    }
-
     // Refresh Token Repository
     single<IRefreshTokenRepository> {
         RefreshTokenRepository()
+    }
+
+    // User Service
+    single {
+        UserService(get(), get(), baseUrl)
     }
 
     // Auth Service
@@ -37,12 +37,12 @@ fun appModule(application: Application) = module {
         AuthService(jwtSecret, get(), get())
     }
 
-    // Plant Repository
+    // Todo Repository
     single<ITodoRepository> {
         TodoRepository(baseUrl)
     }
 
-    // Plant Service
+    // Todo Service
     single {
         TodoService(get(), get())
     }

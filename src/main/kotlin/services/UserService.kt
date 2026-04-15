@@ -25,6 +25,7 @@ import java.util.*
 class UserService(
     private val userRepo: IUserRepository,
     private val refreshTokenRepo: IRefreshTokenRepository,
+    private val baseUrl: String // Tambahkan baseUrl
 ) {
     // Mengambil data user yang login saat ini
     suspend fun getMe(call: ApplicationCall) {
@@ -38,6 +39,7 @@ class UserService(
                     id = user.id,
                     name = user.name,
                     username = user.username,
+                    photo = if (user.photo != null) "$baseUrl/images/users/${user.id}" else null,
                     createdAt = user.createdAt,
                     updatedAt = user.updatedAt,
                 ),
@@ -196,7 +198,7 @@ class UserService(
     // Mengambil photo
     suspend fun getPhoto(call: ApplicationCall) {
         val userId = call.parameters["id"]
-            ?: throw AppException(400, "Data todo tidak valid!")
+            ?: throw AppException(400, "Data user tidak valid!")
 
         val user = userRepo.getById(userId) ?: throw AppException(400, "User not found!")
 

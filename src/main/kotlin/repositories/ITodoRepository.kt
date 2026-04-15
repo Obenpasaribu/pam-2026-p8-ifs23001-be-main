@@ -1,5 +1,7 @@
 package org.delcom.repositories
 
+import org.delcom.data.TodoListResponse
+import org.delcom.data.TodoStats
 import org.delcom.entities.Todo
 
 interface ITodoRepository {
@@ -9,10 +11,10 @@ interface ITodoRepository {
         status: String = "all", 
         page: Int = 1, 
         perPage: Int = 10
-    ): Map<String, Any>
+    ): TodoListResponse
     suspend fun getById(todoId: String): Todo?
     suspend fun create(todo: Todo): String
     suspend fun update(userId: String, todoId: String, newTodo: Todo): Boolean
     suspend fun delete(userId: String, todoId: String): Boolean
-    suspend fun getStats(userId: String): Map<String, Any>
+    suspend fun getStats(userId: String): TodoStats
 }

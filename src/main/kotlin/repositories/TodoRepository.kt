@@ -1,6 +1,8 @@
 package org.delcom.repositories
 
 import org.delcom.dao.TodoDAO
+import org.delcom.data.TodoListResponse
+import org.delcom.data.TodoStats
 import org.delcom.entities.Todo
 import org.delcom.helpers.suspendTransaction
 import org.delcom.helpers.todoDAOToModel
@@ -23,8 +25,8 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
         status: String, 
         page: Int, 
         perPage: Int
-    ): Map<String, Any> = suspendTransaction {
-        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction mapOf("todos" to emptyList<Todo>(), "total" to 0)
+    ): TodoListResponse = suspendTransaction {
+        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction TodoListResponse(emptyList(), 0, page, perPage)
         
         logger.info("Fetching todos for user: $userId, search: $search, status: $status, page: $page")
 
@@ -43,11 +45,11 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
 
         logger.info("Found ${todos.size} todos out of $total total")
 
-        mapOf(
-            "todos" to todos,
-            "total" to total,
-            "page" to page,
-            "perPage" to perPage
+        TodoListResponse(
+            todos = todos,
+            total = total,
+            page = page,
+            perPage = perPage
         )
     }
 
@@ -138,9 +140,9 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
         rowsDeleted >= 1
     }
 
-    override suspend fun getStats(userId: String): Map<String, Any> = suspendTransaction {
-        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction mapOf(
-            "total" to 0, "completed" to 0, "pending" to 0, "percentage" to 0.0
+    override suspend fun getStats(userId: String): TodoStats = suspendTransaction {
+        val userUuid = userId.toUUIDOrNull() ?: return@suspendTransaction TodoStats(
+            total = 0, completed = 0, pending = 0, percentage = 0.0
         )
         
         val allTodos = TodoDAO.find { TodoTable.userId eq userUuid }.toList()
@@ -150,11 +152,11 @@ class TodoRepository(private val baseUrl: String) : ITodoRepository {
         val pending = total - completed
         val percentage = if (total > 0) (completed.toDouble() / total.toDouble() * 100.0) else 0.0
 
-        mapOf(
-            "total" to total,
-            "completed" to completed,
-            "pending" to pending,
-            "percentage" to percentage
+        TodoStats(
+            total = total,
+            completed = completed,
+            pending = pending,
+            percentage = percentage
         )
     }
 

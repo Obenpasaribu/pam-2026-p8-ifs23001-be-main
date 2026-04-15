@@ -48,14 +48,7 @@ class TodoService(
     // Mengambil statistik todo
     suspend fun getStats(call: ApplicationCall) {
         val user = ServiceHelper.getAuthUser(call, userRepo)
-        val statsMap = todoRepo.getStats(user.id)
-
-        val stats = TodoStats(
-            total = statsMap["total"] as Int,
-            completed = statsMap["completed"] as Int,
-            pending = statsMap["pending"] as Int,
-            percentage = statsMap["percentage"] as Double
-        )
+        val stats = todoRepo.getStats(user.id)
 
         val response = DataResponse(
             "success",
